@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/singularity.iml" filepath="$PROJECT_DIR$/singularity.iml" />
+      <module fileurl="file://$PROJECT_DIR$/singularity-client.iml" filepath="$PROJECT_DIR$/singularity-client.iml" />
     </modules>
   </component>
 </project>
