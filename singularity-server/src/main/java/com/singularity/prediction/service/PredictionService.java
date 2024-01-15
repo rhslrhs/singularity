@@ -96,10 +96,14 @@ public class PredictionService {
                 throw new RuntimeException(e);
             }
 
-            BigDecimal bd255 = new BigDecimal(255);
             log.debug("### flatResult: {}", Arrays.toString(flatResult));
+
+
+            BigDecimal bd255 = new BigDecimal(255);
             List<BigDecimal> res = Arrays.stream(flatResult)
-                .mapToObj(g -> new BigDecimal(g).divide(bd255, 8, RoundingMode.HALF_DOWN))
+                // 정규화
+                .mapToObj(g -> new BigDecimal(g).divide(bd255, 32, RoundingMode.HALF_DOWN))
+                // 색반전
                 .map(BigDecimal.ONE::subtract)
                 .toList();
 //            Arrays.stream(flatResult).map()
