@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        canvas { background-color: #fff; border: 1px solid #000; }
+    </style>
+</head>
+<body>
+<!--    <div>-->
+<!--        <table>-->
+<!--            <tr>-->
+<!--                <th><label for="strokeWidth">선굵기</label></th>-->
+<!--                <th><label for="strokeEraseWidth">지우개굵기</label></th>-->
+<!--                <th><label for="eraseAll">전체지우기</label></th>-->
+<!--            </tr>-->
+<!--            <tr>-->
+<!--                <td><input type="range" id="strokeWidth" min="1" max="30" value="5"></td>-->
+<!--                <td><input type="range" id="strokeEraseWidth" min="1" max="30" value="25"></td>-->
+<!--                <td><input type="button" id="eraseAll" value="ALL ">eraserAll</td>-->
+<!--            </tr>-->
+<!--        </table>-->
+<!--    </div>-->
+<canvas id="canvas" width="500px" height="500px"></canvas>
+<canvas id="resizedCanvas" width="150px" height="150px" style="display: none"></canvas>
+<div>
+    <span id="resultMsg1"></span>
+</div>
+<div id="resultMsg2"></div>
+<script>
+    let ws = new WebSocket(`wss://192.168.5.107:8080/ws/images`);
+    ws.onopen = function () {
+        console.log('Connect to ws');
+    };
+    ws.onmessage = async function(msg) {
+        let recvMsgBody = JSON.parse(msg.data || "{}");
+        console.info("## recvMsgBody: ", recvMsgBody);
+        let max = recvMsgBody.maxValIdxPrediction;
+        let sortedResults = recvMsgBody.sortedResults || [];
+        let secondary = sortedResults[1];
+        document.getElementById("resultMsg1").textContent = max.value > 0.9 ? `[${max.idx}] 입니다` :
+            max.value > 0.5 ? `[${max.idx}] 인가요?` : `[${max.idx}] 아니면 [${secondary.idx}] 인 것 같아요.`
+
+        let tbody = ``;
+        for (let i = 0; i < sortedResults.length; i++) {
+            tbody += `<tr><td>${sortedResults[i].idx}</td><td>${Number(sortedResults[i].value).toFixed(4)}</td></tr>`
+        }
+        document.getElementById("resultMsg2").innerHTML = `
+            <table border="1">
+                <tr><th>num</th><th>%</th></tr>
+                ${tbody}
+            </table>
+        `
+
+    }
+
+
+    let canvas = document.getElementById("canvas");
+    let ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0,0,500,500);
+    ctx.lineWidth = 25;
+    let resizedCanvas = document.getElementById("resizedCanvas");
+    let resizedContext = resizedCanvas.getContext("2d");
+    let painting = false;
+
+    function stopPainting() {
+        console.info("# stopPainting - ")
+        painting = false;
+        resizedContext.drawImage(canvas, 0, 0, 150, 150);
+        resizedContext.fillStyle = "#fff";
+
+        let quality = 1
+        ws.send(JSON.stringify({"canvasData": resizedCanvas.toDataURL("image/jpeg")}))
+        // ws.send(JSON.stringify({"canvasData": canvas.toDataURL().length}))
+    }
+
+    function startPainting() {
+        console.info("# startPainting - ")
+        painting = true;
+    }
+
+    function onMouseMove(event) {
+        // console.info("# onMouseMove - ", event)
+
+        let x1 = event.offsetX;
+        let y1 = event.offsetY;
+
+        if (!painting) {
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+        } else {
+            ctx.lineTo(x1, y1);
+            ctx.stroke();
+        }
+    }
+
+    if (canvas) {
+        canvas.addEventListener("mousemove", onMouseMove);//마우스가 움직일때 onMouseMove 메서드가 작동해라
+        canvas.addEventListener("mousedown", startPainting);//마우스를 눌렀을때 startPainting 메서드가 동작해라
+        canvas.addEventListener("mouseup", stopPainting);//마우스를 떼었을때 stopPainting 메서드가 동작해라
+        canvas.addEventListener("mouseleave", stopPainting);//마우스가 벗어났을때 stopPainting 메서드가 동작해라
+    }
+
+    // document.getElementById("strokeWidth").addEventListener("change", (e) => {
+    //     ctx.lineWidth = e.target.value; // 선 굵기 10픽셀
+    //     console.log("## aa " + e.target.value)
+    // });
+    // // document.getElementById("strokeEraseWidth").addEventListener("change", (e) => {
+    // //     ctx.lineWidth = e.target.value; // 선 굵기 10픽셀
+    // //     console.log("## aa " + e.target.value)
+    // // });
+    // document.getElementById("eraseAll").addEventListener("change", (e) => {
+    // });
+    //
+    // document.getElementById("strokeEraseWidth").dispatchEvent(new Event('change'));
+    // // document.getElementById("strokeWidth").dispatchEvent(new Event('change'));
+</script>
+</body>
+</html>

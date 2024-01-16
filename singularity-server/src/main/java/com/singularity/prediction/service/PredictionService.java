@@ -17,6 +17,7 @@ import java.awt.image.RenderedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -40,80 +41,93 @@ import org.springframework.web.reactive.function.client.WebClient.RequestBodyUri
 public class PredictionService {
 
     private static final TypeReference<NumImagePredictionReqVo> TR = new TypeReference<>() {};
+    private static final int MODEL_TARGET_XY = 28;
+
 
     @Value("${ml.predict.url_v1}")
     private String mlPredictUrl;
 
     public NumImagePredictionResDto predict(NumImagePredictionReqDto reqDto) {
-        int targetXY = 28;
         List<MultipartFile> files = reqDto.getFiles();
         NumImagePredictionReqVo reqVo = new NumImagePredictionReqVo();
         files.forEach(f -> {
-
-            BufferedImage originalImage;
-            BufferedImage newImage;
+            List<BigDecimal> res = null;
             try {
-                originalImage = ImageIO.read(f.getInputStream());
-
-                Image resizeImage = originalImage.getScaledInstance(targetXY, targetXY, Image.SCALE_SMOOTH);
-                newImage = new BufferedImage(targetXY, targetXY, originalImage.getType());
-
-                Graphics g = newImage.getGraphics();
-                g.drawImage(resizeImage, 0, 0, null);
-                g.dispose();
+                res = imageNormalization(f.getInputStream());
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            File file = new File("c:/dev/resize_" + UUID.randomUUID() + ".jpg");
-            try {
-                ImageIO.write(newImage, "jpg", file);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-
-            BufferedImage bi = null;
-            int[] flatResult = new int[targetXY * targetXY];
-            try {
-                bi = ImageIO.read(file);
-                int[][] result = new int[targetXY][targetXY];
-                for (int row = 0; row < targetXY; row++) {
-                    for (int col = 0; col < targetXY; col++) {
-                        int rgb = bi.getRGB(col, row);
-//                        result[row][col] = rgb;
-                        int a = (rgb >> 24) & 0xff;
-                        int r = (rgb >> 16) & 0xff;
-                        int g = (rgb >> 8) & 0xff;
-                        int b = rgb & 0xff;
-//                        log.debug("### c[{},{}] {}/{}/{}/{}", row, col, a, r, b, g);
-//                        r = g = b = (int)(0.299 * r + 0.587 * g + 0.114 * b);
-                        int gray = (int)(0.299 * r + 0.587 * g + 0.114 * b);
-                        result[row][col] = gray;
-//                        log.debug("### g[{},{}] {}/{}/{}/{}", row, col, a, r, b, g);
-                    }
-                }
-                flatResult = Arrays.stream(result).flatMapToInt(Arrays::stream).toArray();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-
-            log.debug("### flatResult: {}", Arrays.toString(flatResult));
-
-
-            BigDecimal bd255 = new BigDecimal(255);
-            List<BigDecimal> res = Arrays.stream(flatResult)
-                // 정규화
-                .mapToObj(g -> new BigDecimal(g).divide(bd255, 32, RoundingMode.HALF_DOWN))
-                // 색반전
-                .map(BigDecimal.ONE::subtract)
-                .toList();
-//            Arrays.stream(flatResult).map()
-            log.debug("### res: {}", res);
-
-//            NumImagePredictionReqVo reqVo = "";
            reqVo.getInstances().add(res);
         });
 
         return predict(reqVo);
+    }
+    public NumImagePredictionResDto predict(InputStream is) {
+        NumImagePredictionReqVo reqVo = new NumImagePredictionReqVo();
+        reqVo.getInstances().add(imageNormalization(is));
+        return predict(reqVo);
+    }
+
+
+    private static List<BigDecimal> imageNormalization(InputStream is) {
+        BufferedImage originalImage;
+        BufferedImage newImage;
+        try {
+            originalImage = ImageIO.read(is);
+
+            Image resizeImage = originalImage.getScaledInstance(MODEL_TARGET_XY, MODEL_TARGET_XY, Image.SCALE_SMOOTH);
+            newImage = new BufferedImage(MODEL_TARGET_XY, MODEL_TARGET_XY, originalImage.getType());
+
+            Graphics g = newImage.getGraphics();
+            g.drawImage(resizeImage, 0, 0, null);
+            g.dispose();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        File file = new File("/Users/jingon/tmp_resize/resize_" + UUID.randomUUID() + ".jpg");
+        try {
+            ImageIO.write(newImage, "png", file);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        BufferedImage bi;
+        int[] flatResult;
+        try {
+            bi = ImageIO.read(file);
+            int[][] result = new int[MODEL_TARGET_XY][MODEL_TARGET_XY];
+            for (int row = 0; row < MODEL_TARGET_XY; row++) {
+                for (int col = 0; col < MODEL_TARGET_XY; col++) {
+                    int rgb = bi.getRGB(col, row);
+//                        result[row][col] = rgb;
+                    int a = (rgb >> 24) & 0xff;
+                    int r = (rgb >> 16) & 0xff;
+                    int g = (rgb >> 8) & 0xff;
+                    int b = rgb & 0xff;
+//                        log.debug("### c[{},{}] {}/{}/{}/{}", row, col, a, r, b, g);
+//                        r = g = b = (int)(0.299 * r + 0.587 * g + 0.114 * b);
+                    int gray = (int)(0.299 * r + 0.587 * g + 0.114 * b);
+                    result[row][col] = gray;
+//                    log.debug("### g[{},{}] {}/{}/{}/{}", row, col, a, r, b, g);
+                }
+            }
+            flatResult = Arrays.stream(result).flatMapToInt(Arrays::stream).toArray();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        log.debug("### flatResult: ({}) {}", flatResult.length, Arrays.toString(flatResult));
+
+        BigDecimal bd255 = new BigDecimal(255);
+        List<BigDecimal> res = Arrays.stream(flatResult)
+            // 정규화
+            .mapToObj(g -> new BigDecimal(g).divide(bd255, 8, RoundingMode.HALF_DOWN))
+            // 색반전
+            .map(BigDecimal.ONE::subtract)
+            .toList();
+//            Arrays.stream(flatResult).map()
+        log.debug("### res: {}", res);
+        return res;
     }
 
     public NumImagePredictionResDto predict(NumImagePredictionReqVo reqVo) {
