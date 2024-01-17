@@ -28,7 +28,8 @@
 </div>
 <div id="resultMsg2"></div>
 <script>
-    let ws = new WebSocket(`wss://192.168.5.107:8080/ws/images`);
+    // let ws = new WebSocket(`wss://192.168.5.107:8080/ws/images`);
+    let ws = new WebSocket(`wss://${location.host}/ws/images`);
     ws.onopen = function () {
         console.log('Connect to ws');
     };
