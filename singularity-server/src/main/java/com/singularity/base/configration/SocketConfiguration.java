@@ -2,7 +2,6 @@ package com.singularity.base.configration;
 
 import com.singularity.base.component.CanvasImageSocketHandler;
 import com.singularity.base.component.SocketHandler;
-import com.singularity.prediction.service.PredictionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;

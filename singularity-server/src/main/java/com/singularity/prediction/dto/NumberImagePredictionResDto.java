@@ -12,7 +12,7 @@ import lombok.ToString;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter
 @ToString
-public class NumImagePredictionResDto {
+public class NumberImagePredictionResDto extends BasePredictionResDto {
     private List<ValIdxPredictionResDto> results;
     private List<ValIdxPredictionResDto> sortedResults;
     private ValIdxPredictionResDto maxValIdxPrediction;
