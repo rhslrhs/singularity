@@ -38,9 +38,9 @@ public class CanvasImageSocketHandler extends TextWebSocketHandler {
         log.debug("## handleTextMessage: {}", messageMap);
         TextMessage sendMsg = recvMsg;
 
-        if (messageMap.containsKey("canvasData")) {
+        if (messageMap.containsKey("imageData")) {
             NumberImageBase64StrPredictionReqDto reqDto = NumberImageBase64StrPredictionReqDto.builder()
-                .base64Str((String) messageMap.get("canvasData"))
+                .base64Str((String) messageMap.get("imageData"))
                 .build();
 
             NumberImagePredictionResDto predict = predictionService.predict(reqDto);

@@ -52,7 +52,6 @@
                 ${tbody}
             </table>
         `
-
     }
 
 
@@ -60,7 +59,7 @@
     let ctx = canvas.getContext("2d");
     ctx.fillStyle = "#fff";
     ctx.fillRect(0,0,500,500);
-    ctx.lineWidth = 25;
+    ctx.lineWidth = 35;
     let resizedCanvas = document.getElementById("resizedCanvas");
     let resizedContext = resizedCanvas.getContext("2d");
     let painting = false;
@@ -72,8 +71,8 @@
         resizedContext.fillStyle = "#fff";
 
         let quality = 1
-        ws.send(JSON.stringify({"canvasData": resizedCanvas.toDataURL("image/jpeg")}))
-        // ws.send(JSON.stringify({"canvasData": canvas.toDataURL().length}))
+        ws.send(JSON.stringify({"imageData": resizedCanvas.toDataURL("image/jpeg")}))
+        // ws.send(JSON.stringify({"imageData": canvas.toDataURL().length}))
     }
 
     function startPainting() {
