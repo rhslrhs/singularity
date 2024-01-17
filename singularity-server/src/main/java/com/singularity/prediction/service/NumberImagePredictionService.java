@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Slf4j
 public class NumberImagePredictionService extends BasePredictionService {
 
+    private static final int IMAGE_MODEL_CALC_SIZE = 28;
     @Value("${tf-serv.predict.number_image.url-v1}")
     private String tfServingUrl;
 
@@ -34,7 +36,7 @@ public class NumberImagePredictionService extends BasePredictionService {
         final List<List<BigDecimal>> instances = new ArrayList<>();
         files.forEach(f -> {
             try {
-                instances.add(ImageUtils.normalization(ImageUtils.resize(f.getInputStream(), 28, 28)));
+                instances.add(ImageUtils.normalization(ImageUtils.resize(f.getInputStream(), IMAGE_MODEL_CALC_SIZE, IMAGE_MODEL_CALC_SIZE)));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -45,13 +47,19 @@ public class NumberImagePredictionService extends BasePredictionService {
     }
 
     public NumberImagePredictionResDto predict(NumberImageBase64StrPredictionReqDto reqDto) {
-        List<BigDecimal> singleInstance = ImageUtils.normalization(ImageUtils.resize(reqDto.getBase64Str(), 28, 28));
+        List<BigDecimal> singleInstance = ImageUtils.normalization(ImageUtils.resize(reqDto.getBase64Str(), IMAGE_MODEL_CALC_SIZE, IMAGE_MODEL_CALC_SIZE));
 
         NumberImagePredictionReqVo reqVo = new NumberImagePredictionReqVo(Collections.singletonList(singleInstance));
         return predict(reqVo);
     }
 
     private NumberImagePredictionResDto predict(NumberImagePredictionReqVo reqVo) {
-        return predict(tfServingUrl, reqVo, NumberImagePredictionResDto.class);
+        List<String> processedImgs = reqVo.getInstances().stream()
+            .map(i -> ImageUtils.toBase64Str(i, IMAGE_MODEL_CALC_SIZE, IMAGE_MODEL_CALC_SIZE))
+            .collect(Collectors.toList());
+
+        NumberImagePredictionResDto predict = predict(tfServingUrl, reqVo, NumberImagePredictionResDto.class);
+        predict.setProcessedImgs(processedImgs);
+        return predict;
     }
 }

@@ -32,10 +32,10 @@ public class CanvasImageSocketHandler extends TextWebSocketHandler {
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage recvMsg) throws Exception {
-        log.debug("## handleTextMessage: {} - {}", session, recvMsg);
+//        log.debug("## handleTextMessage: {} - {}", session, recvMsg);
         Map<String, Object> messageMap = JsonUtils.parse(recvMsg.getPayload(), new TypeReference<>() {});
 
-        log.debug("## handleTextMessage: {}", messageMap);
+//        log.debug("## handleTextMessage: {}", messageMap);
         TextMessage sendMsg = recvMsg;
 
         if (messageMap.containsKey("imageData")) {

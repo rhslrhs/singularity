@@ -6,6 +6,7 @@ import java.util.List;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -16,6 +17,8 @@ public class NumberImagePredictionResDto extends BasePredictionResDto {
     private List<ValIdxPredictionResDto> results;
     private List<ValIdxPredictionResDto> sortedResults;
     private ValIdxPredictionResDto maxValIdxPrediction;
+    @Setter
+    private List<String> processedImgs;
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
