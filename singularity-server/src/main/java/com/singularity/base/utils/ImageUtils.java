@@ -14,6 +14,8 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 import java.nio.file.Files;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
@@ -27,6 +29,7 @@ public class ImageUtils {
 
     private static final int NORMALIZATION_SCALE = 16;
     private static final BigDecimal BD_255 = new BigDecimal(255);
+    private static final String TRAIN_FILE_PATH = "/dev/train/org/";
 
     public static Image resize(String base64Img, int width, int height) {
         if (base64Img == null || base64Img.isEmpty()) {
@@ -58,8 +61,9 @@ public class ImageUtils {
 
         try {
             String uuid = UUID.randomUUID().toString();
-            ImageIO.write(originalImage, "jpg", new FileOutputStream("c:/dev/train/org/" + uuid + "-1.jpg"));
-            ImageIO.write(newImage, "jpg", new FileOutputStream("c:/dev/train/org/" + uuid + "-2.jpg"));
+            String trainFilePath = TRAIN_FILE_PATH + LocalDate.now().format(DateTimeFormatter.ISO_DATE) + uuid;
+            ImageIO.write(originalImage, "jpg", new FileOutputStream(trainFilePath + "-1.jpg"));
+            ImageIO.write(newImage, "jpg", new FileOutputStream(trainFilePath + "-2.jpg"));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
