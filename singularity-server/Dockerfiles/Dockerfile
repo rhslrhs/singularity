@@ -1,7 +1,6 @@
 # ```
 # singularity\singularity-server>  docker build -t singularity-gw:1.0.0 -f Dockerfiles/Dockerfile .
 # ```
-
 FROM openjdk:17-jdk-slim
 LABEL name="rhslrhs"
 
