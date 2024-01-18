@@ -11,6 +11,6 @@ RUN echo 'export PATH=/usr/local/openjdk-17/bin:$PATH' >> ~/.bashrc
 
 EXPOSE 8080
 
-COPY build/libs/singularity-server-0.0.1-SNAPSHOT.jar /apps/singularity-server-0.0.1-SNAPSHOT.jar
+COPY build/libs/singularity-server-0.0.1-SNAPSHOT.jar /var/apps/singularity-server-0.0.1-SNAPSHOT.jar
 
-CMD ["java", "-jar", "/apps/singularity-server-0.0.1-SNAPSHOT.jar"]
+CMD ["java", "-jar", "/var/apps/singularity-server-0.0.1-SNAPSHOT.jar"]
