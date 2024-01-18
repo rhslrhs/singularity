@@ -3,6 +3,7 @@ package com.singularity.base.utils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.singularity.base.dto.BaseResDto;
 
 public class JsonUtils {
     public static final ObjectMapper OM = new ObjectMapper();
@@ -27,5 +28,9 @@ public class JsonUtils {
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static <T> T convertType(Object obj, Class<T> dtoClass) {
+        return JsonUtils.parse(JsonUtils.stringify(obj), dtoClass);
     }
 }

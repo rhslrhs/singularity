@@ -1,6 +1,5 @@
 package com.singularity.prediction.vo;
 
-import com.singularity.base.utils.JsonUtils;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -13,7 +12,7 @@ import lombok.ToString;
 
 @Getter
 @ToString
-public class NumImagePredictionResVo {
+public class NumberImagePredictionResVo extends BasePredictionResVo {
     List<List<BigDecimal>> predictions;
 
     List<ValIdxPredictionVo> results = new ArrayList<>();
@@ -48,10 +47,5 @@ public class NumImagePredictionResVo {
     public static class ValIdxPredictionVo {
         private int idx;
         private BigDecimal value;
-    }
-
-    public <T> T toDto(Class<T> dtoClass) {
-//        return JsonUtils.OM.convertValue(this, dtoClass);
-        return JsonUtils.parse(JsonUtils.stringify(this), dtoClass);
     }
 }

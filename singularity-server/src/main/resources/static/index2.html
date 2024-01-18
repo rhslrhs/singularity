@@ -21,14 +21,22 @@
 <!--            </tr>-->
 <!--        </table>-->
 <!--    </div>-->
-<canvas id="canvas" width="500px" height="500px"></canvas>
-<canvas id="resizedCanvas" width="150px" height="150px" style="display: none"></canvas>
+<div>
+    <span>
+        <canvas id="canvas" width="300px" height="300px"></canvas>
+        <canvas id="resizedCanvas" width="150px" height="150px" style="display: none"></canvas>
+    </span>
+    <span>
+        <img id="processedImg1" width="300px" height="300px"/>
+        <img id="processedImg2"/>
+    </span>
+</div>
 <div>
     <span id="resultMsg1"></span>
 </div>
-<div id="resultMsg2"></div>
 <script>
-    let ws = new WebSocket(`wss://192.168.5.107:8080/ws/images`);
+    // let ws = new WebSocket(`wss://192.168.5.107:8080/ws/images`);
+    let ws = new WebSocket(`wss://${location.host}/ws/images`);
     ws.onopen = function () {
         console.log('Connect to ws');
     };
@@ -51,28 +59,33 @@
                 ${tbody}
             </table>
         `
-
+        let processedImg = recvMsgBody.processedImgs[0];
+        if (processedImg) {
+            document.getElementById("processedImg1").src = processedImg;
+            document.getElementById("processedImg2").src = processedImg;
+        }
     }
 
 
     let canvas = document.getElementById("canvas");
     let ctx = canvas.getContext("2d");
-    ctx.fillStyle = "#fff";
+    ctx.fillStyle = "#000";
     ctx.fillRect(0,0,500,500);
-    ctx.lineWidth = 25;
+    ctx.lineWidth = 15;
+    ctx.strokeStyle = "#fff";
     let resizedCanvas = document.getElementById("resizedCanvas");
     let resizedContext = resizedCanvas.getContext("2d");
     let painting = false;
 
     function stopPainting() {
-        console.info("# stopPainting - ")
-        painting = false;
-        resizedContext.drawImage(canvas, 0, 0, 150, 150);
-        resizedContext.fillStyle = "#fff";
+        if (painting) {
+            console.info("# stopPainting - ")
+            painting = false;
+            resizedContext.drawImage(canvas, 0, 0, 150, 150);
+            resizedContext.fillStyle = "#000";
 
-        let quality = 1
-        ws.send(JSON.stringify({"canvasData": resizedCanvas.toDataURL("image/jpeg")}))
-        // ws.send(JSON.stringify({"canvasData": canvas.toDataURL().length}))
+            ws.send(JSON.stringify({"imageData": resizedCanvas.toDataURL("image/jpeg")}))
+        }
     }
 
     function startPainting() {
@@ -93,6 +106,45 @@
             ctx.lineTo(x1, y1);
             ctx.stroke();
         }
+    }
+    function assignElement() {
+
+        this.undoEl = this.toolbarEl.querySelector("#undo");
+    }
+
+    function addEvent() {
+
+        this.undoEl.addEventListener("click",this.onClickUndo.bind(this));
+    }
+
+    function saveState() {
+        if (this.undoArray.length > 4) {
+            this.undoArray.shift(); // 맨 처음의 데이터를 제거한다.
+            this.undoArray.push(this.canvasEl.toDataURL());
+        } else {
+            this.undoArray.push(this.canvasEl.toDataURL());
+        }
+    }
+
+    function onClickUndo() {
+        if (this.undoArray.length === 0) return;
+        let previousDataUrl = this.undoArray.pop();
+        let previousImage = new Image();
+        previousImage.src = previousDataUrl;
+        previousImage.onload = () => {
+            this.context.clearRect(0, 0, this.canvasEl.width, this.canvasEl.height);
+            this.context.drawImage(
+                previousImage,
+                0,
+                0,
+                this.canvasEl.width,
+                this.canvasEl.height,
+                0,
+                0,
+                this.canvasEl.width,
+                this.canvasEl.height
+            );
+        };
     }
 
     if (canvas) {
@@ -116,5 +168,6 @@
     // document.getElementById("strokeEraseWidth").dispatchEvent(new Event('change'));
     // // document.getElementById("strokeWidth").dispatchEvent(new Event('change'));
 </script>
+<div id="resultMsg2"></div>
 </body>
 </html>
